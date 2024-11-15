@@ -587,5 +587,27 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+<<<<<<< HEAD
 ### 61C Lab ###
 !/*/tests/reference-output/*.out
+=======
+### snake ###
+# Executables
+interactive-snake
+snake
+unit-tests
+custom-tests
+
+# Save files
+*-out.snk
+unit-test-*.snk
+
+# Temp files
+*.tmp
+
+# Project 4
+convolve_*
+!src/io.o
+tests/
+
+>>>>>>> 053f43a7b1c89760932d146362ff571564a3d3e1
