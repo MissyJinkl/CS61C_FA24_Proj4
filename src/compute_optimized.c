@@ -22,15 +22,14 @@ int convolve(matrix_t *a_matrix, matrix_t *b_matrix, matrix_t **output_matrix) {
   (*output_matrix)->data = malloc(output_rows * output_cols * sizeof(int));
   if ((*output_matrix)->data == NULL) return -1;
 
+  __m256i reverse_indices = _mm256_setr_epi32(7,6,5,4,3,2,1,0);
 
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(2)
   for (int i = 0; i < output_rows; i++) {
     for (int j = 0; j < output_cols; j++) {
         __m256i sum_vec = _mm256_setzero_si256();
-        __m256i reverse_indices = _mm256_setr_epi32(7,6,5,4,3,2,1,0);
         int sum = 0;
 
-        //__m256i product = _mm256_setzero_si256();        
         for (int m = 0; m < b_rows; m++) {
           for (int n = 0; n < b_cols/8*8; n+=8) {
             int a_index = (i+m) * a_cols + (j + n);
@@ -41,17 +40,19 @@ int convolve(matrix_t *a_matrix, matrix_t *b_matrix, matrix_t **output_matrix) {
             __m256i product = _mm256_mullo_epi32(a_val, b_val);
             sum_vec = _mm256_add_epi32(sum_vec, product);
           }
+          for (int n = b_cols/8*8; n < b_cols; n++) {
+            int a_val = a_matrix->data[(i+m) * a_cols + (j + n)];
+            int b_val = b_matrix->data[(b_rows - 1 - m) * b_cols + (b_cols - 1 - n)];
+            sum += a_val * b_val;
+          }
         }
-      
         
         int tmp[8];
         _mm256_storeu_si256((__m256i *) tmp, sum_vec);
-        for (int k = 0; k < 8; k++) {
-            sum += tmp[k];
-        }
+        sum += tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7];
 
         //tail cases
-        #pragma omp parallel
+      /*#pragma omp parallel
         {
           int private_sum = 0;
           #pragma omp for
@@ -65,6 +66,15 @@ int convolve(matrix_t *a_matrix, matrix_t *b_matrix, matrix_t **output_matrix) {
           #pragma omp critical
           sum += private_sum;
         }
+        
+        for (int m = 0; m < b_rows; m++) {
+            for (int n = b_cols/8*8; n < b_cols; n++) {
+              int a_val = a_matrix->data[(i+m) * a_cols + (j + n)];
+              int b_val = b_matrix->data[(b_rows - 1 - m) * b_cols + (b_cols - 1 - n)];
+              sum += a_val * b_val;
+            }
+          }
+        */
         (*output_matrix)->data[i * output_cols + j] = sum;
     }
   }
