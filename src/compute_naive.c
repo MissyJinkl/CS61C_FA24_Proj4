@@ -22,10 +22,10 @@ int convolve(matrix_t *a_matrix, matrix_t *b_matrix, matrix_t **output_matrix) {
   for (int i = 0; i < output_rows; i++) {
     for (int j = 0; j < output_cols; j++) {
         int sum = 0;
-        for (int m = 0; i < b_rows; m++) {
-          for (int n = 0; j < b_cols; n++) {
+        for (int m = 0; m < b_rows; m++) {
+          for (int n = 0; n < b_cols; n++) {
             int a_val = a_matrix->data[(i+m) * a_cols + (j + n)];
-            int b_val = b_matrix->data[m * b_cols + n];
+            int b_val = b_matrix->data[(b_rows - 1 - m) * b_cols + (b_cols - 1 - n)];
             sum += a_val * b_val;
           }
         }
